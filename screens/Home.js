@@ -12,7 +12,7 @@ import {
   ScrollView
 } from 'react-native';
 
-import {Profiles} from '../components';
+import {Profiles, ProgressBar} from '../components';
 
 import { dummyData, COLORS, SIZES, FONTS, icons, images } from '../constants';
 
@@ -118,7 +118,7 @@ const Home = ({ navigation }) => {
                   <View
                     style={{
                       flexDirection: 'row',
-                      height: 30,
+                      height: 50,
                       width: '100%',
                       marginBottom: SIZES.radius,
                       paddingHorizontal: SIZES.radius,
@@ -170,7 +170,9 @@ const Home = ({ navigation }) => {
                             ...FONTS.h4
                           }}
                         >Still Watching</Text>
-                        <Profiles />
+                        <Profiles 
+                          profiles={item.stillWatching}
+                        />
                       </View>
                     }
                   </View>
@@ -180,6 +182,146 @@ const Home = ({ navigation }) => {
           )
         }}
       />
+    )
+  }
+
+  function renderDots() {
+
+    const dotPosition = Animated.divide(newSeasonScrollX, SIZES.width)
+
+    return (
+      <View
+        style={{
+          marginTop: SIZES.padding,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {dummyData.newSeason.map((item, index) => {
+
+          const opacity = dotPosition.interpolate({
+            inputRange: [index - 1, index, index + 1],
+            outputRange: [0.3, 1, 0.3],
+            extrapolate: "clamp"
+          })
+          const dotWidth = dotPosition.interpolate({
+            inputRange: [index - 1, index, index + 1],
+            outputRange: [6, 20, 6],
+            extrapolate: "clamp"
+          })
+          const dotColor = dotPosition.interpolate({
+            inputRange: [index - 1, index, index + 1],
+            outputRange: [COLORS.lightGray, COLORS.primary, COLORS.lightGray],
+            extrapolate: "clamp"
+          })
+
+          return (
+            <Animated.View
+              key={`dot-${index}`}
+              opacity={opacity}
+              style={{
+                borderRadius: SIZES.radius,
+                marginHorizontal: 3,
+                width: dotWidth,
+                height: 6,
+                backgroundColor: dotColor
+              }}
+            />
+          )
+        })}
+      </View>
+    )
+  }
+
+  function renderContinueWatchingSection() {
+    return (
+      <View
+        style={{
+          marginTop: SIZES.padding
+        }}
+      >
+        {/* Header */}
+        <View
+          style={{
+            flexDirection: 'row',
+            paddingHorizontal: SIZES.padding,
+            alignItems: 'center',
+          }}
+        >
+          <Text
+            style={{
+              flex: 1,
+              color: COLORS.white,
+              ...FONTS.h2
+            }}
+          >Continue Watching</Text>
+          <Image 
+            source={icons.right_arrow}
+            style={{
+              width: 20,
+              height: 20,
+              tintColor: COLORS.primary
+            }}
+          />
+        </View>
+
+        {/* List */}
+        <FlatList 
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            marginTop: SIZES.padding
+          }}
+          data={dummyData.continueWatching}
+          keyExtractor={item => `${item.id}`}
+          renderItem={({item, index}) => {
+            return (
+              <TouchableOpacity
+                onPress={() => navigation.navigate("MovieDetail", { selectedMovie: item })}
+              >
+                <View
+                  style={{
+                    marginLeft: index == 0 ? SIZES.padding : 20,
+                    marginRight: index == dummyData.continueWatching.length - 1 ? SIZES.padding : 0
+                  }}
+                >
+                  {/* Thumbnail */}
+                  <Image 
+                    source={item.thumbnail}
+                    resizeMode="cover"
+                    style={{
+                      width: SIZES.width / 3,
+                      height: (SIZES.width / 3) + 60,
+                      borderRadius: 20
+                    }}
+                  />
+
+                  {/* Name */}
+                  <Text
+                    style={{
+                      marginTop: SIZES.base,
+                      color: COLORS.white,
+                      ...FONTS.h4
+                    }}
+                  >{item.name}</Text>
+
+                  {/* Progress Bar */}
+                  <ProgressBar 
+                    containerStyle={{
+                      marginTop: SIZES.radius,
+                    }}
+                    barStyle={{
+                      height: 3,
+                    }}
+                    barPercentage={item.overallProgress}
+                  />
+                </View>
+              </TouchableOpacity>
+            )
+          }}
+        />
+      </View>
     )
   }
 
@@ -198,6 +340,8 @@ const Home = ({ navigation }) => {
         }}
       >
         {renderNewSeasonSection()}
+        {renderDots()}
+        {renderContinueWatchingSection()}
       </ScrollView>
     </SafeAreaView>
   )
